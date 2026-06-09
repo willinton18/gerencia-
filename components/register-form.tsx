@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
 import { CLIENT_TYPE } from "@/lib/roles"
+import { TermsDialog } from "@/components/terms-dialog"
 import { UserPlus, AlertCircle } from "lucide-react"
 
 const inputClass =
@@ -21,6 +22,7 @@ export function RegisterForm() {
     organization: "",
   })
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [termsOpen, setTermsOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -163,8 +165,16 @@ export function RegisterForm() {
             className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary"
           />
           <span className="text-sm leading-relaxed text-foreground">
-            Acepto los Términos y Condiciones y autorizo el tratamiento de mis datos personales
-            conforme a la <strong>Ley 1581 de 2012 (Habeas Data)</strong>.
+            Acepto los{" "}
+            <button
+              type="button"
+              onClick={() => setTermsOpen(true)}
+              className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
+            >
+              Términos y Condiciones
+            </button>{" "}
+            y autorizo el tratamiento de mis datos personales conforme a la{" "}
+            <strong>Ley 1581 de 2012 (Habeas Data)</strong>.
           </span>
         </label>
 
@@ -180,6 +190,15 @@ export function RegisterForm() {
           Inicia sesión
         </Link>
       </p>
+
+      <TermsDialog
+        open={termsOpen}
+        onClose={() => setTermsOpen(false)}
+        onAccept={() => {
+          setAcceptedTerms(true)
+          setTermsOpen(false)
+        }}
+      />
     </div>
   )
 }
