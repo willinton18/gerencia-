@@ -14,34 +14,56 @@ const STAFF = [
   { name: "Carlos Méndez", email: "carlos@st.com", role: ROLES.ADMIN_VENTAS },
 ]
 
+async function seedStaff() {
+  await dbConnect()
+  const passwordHash = await hashPassword("demo1234")
+  const created: string[] = []
+
+  for (const member of STAFF) {
+    const exists = await User.findOne({ email: member.email })
+    if (!exists) {
+      await User.create({
+        name: member.name,
+        email: member.email,
+        passwordHash,
+        role: member.role,
+        acceptedTerms: true,
+        acceptedTermsAt: new Date(),
+      })
+      created.push(member.email)
+    }
+  }
+
+  return NextResponse.json({
+    message:
+      created.length > 0
+        ? `Cuentas internas creadas. Contraseña: demo1234`
+        : "Las cuentas internas ya existían.",
+    created,
+  })
+}
+
 export async function POST() {
   try {
-    await dbConnect()
-    const passwordHash = await hashPassword("demo1234")
-    const created: string[] = []
+    return await seedStaff()
+  } catch (error) {
+    console.log("[v0] Error en seed:", error instanceof Error ? error.message : error)
+    return NextResponse.json({ error: "Error al sembrar cuentas." }, { status: 500 })
+  }
+}
 
-    for (const member of STAFF) {
-      const exists = await User.findOne({ email: member.email })
-      if (!exists) {
-        await User.create({
-          name: member.name,
-          email: member.email,
-          passwordHash,
-          role: member.role,
-          acceptedTerms: true,
-          acceptedTermsAt: new Date(),
-        })
-        created.push(member.email)
-      }
-    }
+// Conveniencia para desarrollo: permite sembrar visitando la URL en el navegador.
+// Deshabilitado en producción para no exponer la creación de cuentas internas.
+export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Usa POST para sembrar las cuentas internas en producción." },
+      { status: 405 },
+    )
+  }
 
-    return NextResponse.json({
-      message:
-        created.length > 0
-          ? `Cuentas internas creadas. Contraseña: demo1234`
-          : "Las cuentas internas ya existían.",
-      created,
-    })
+  try {
+    return await seedStaff()
   } catch (error) {
     console.log("[v0] Error en seed:", error instanceof Error ? error.message : error)
     return NextResponse.json({ error: "Error al sembrar cuentas." }, { status: 500 })
